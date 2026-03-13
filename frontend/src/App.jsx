@@ -1,25 +1,18 @@
-import { useEffect, useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import axios from 'axios'
+import React from 'react'
+import {BrowserRouter, Route, Routes} from 'react-router-dom'
+import Home from './Pages/Home'
+import Create from './Pages/Create'
 
 function App() {
-  const[tittle,setTittle]=useState(null)
-  const [count, setCount] = useState(0)
-  async function getData(){
-    let response=await axios.get("http://localhost:3000/");
-    console.log(response.data)
-    setTittle(response.data)
-  }
-
-  useEffect(function(){
-    getData()
-  },[])
   return (
-   <div>
-      <h1>{tittle && tittle.message}</h1>
-   </div>
+    <div>
+      <BrowserRouter>
+      <Routes>
+        <Route path='/' element={<Home/>}/>
+        <Route path='/create' element={<Create/>}/>
+      </Routes>
+      </BrowserRouter>
+    </div>
   )
 }
 
