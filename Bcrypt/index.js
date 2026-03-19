@@ -2,11 +2,31 @@ const express = require('express')
 const app = express()
 const bcrypt = require('bcrypt')
 const mongoose = require("mongoose")
+const jwt = require('jsonwebtoken')
 
 app.use(express.json()) //to handle form data 
 app.use(express.urlencoded({ //to handle form data
     extended: true
 }))
+
+
+function checkLogin(req, res, next) {
+    let token = req.headers.authorization.split(" ")[1]
+    if (!token) {
+        return res.json({
+            message: "unauthorized",
+        })
+    }
+    let decoded = jwt.verify(token, "codekipathshala")
+    if (!decoded) {
+        return res.json({
+            message: "invalid token"
+        })
+    }
+    console.log(decoded);
+    req.user = decoded
+    next();
+}
 
 async function connectDb() {
     try {
@@ -25,8 +45,8 @@ let userSchema = mongoose.Schema({
 
 let User = mongoose.model('User', userSchema)
 
-app.get('/', function(req, res) {
-    res.send("sever chal raha hai")
+app.get('/', checkLogin, function(req, res) {
+    res.send(req.user)
 })
 
 app.post('/register', async function(req, res) { //since this is not part of js hence we use async await
@@ -39,9 +59,15 @@ app.post('/register', async function(req, res) { //since this is not part of js 
         name: data.name,
         password: bcryptHash //data.password,
     })
+    let token = jwt.sign({
+        id: user._id,
+        name: user.name
+    }, 'codekipathshala')
+
     res.json({
         message: "successfull",
-        user: user
+        user: user,
+        token: token
     })
 })
 app.post('/login', async function(req, res) { //to check for password comparison using login page
@@ -55,13 +81,17 @@ app.post('/login', async function(req, res) { //to check for password comparison
             message: "invalid credential"
         })
     }
-    res.json({
-        message: "user logged in successfully",
-        user: user
+
+    let token = jwt.sign({
+        id: user._id,
+        name: user.name
+    }, 'codekipathshala', {
+        expiresIn: '1h'
     })
     res.json({
-        message: "User logged in successfully",
-        user: user
+        message: "user logged in successfully",
+        user: user,
+        token: token
     })
 })
 
